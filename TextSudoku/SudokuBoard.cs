@@ -1,5 +1,5 @@
 ﻿
-using System.Xml.Linq;
+using TextSudoku.SudokuExceptions;
 
 namespace TextSudoku;
 
@@ -16,15 +16,15 @@ internal sealed class SudokuBoard {
         }
         set {
             if((value < '0' && value > '9') || value != ' ') {
-                //TODO: Add incorectElementException.
+                throw new UndefinedElementException(value);
             }
 
             if(column < 0 || column >= BOARD_SIZE || row < 0 || column >= BOARD_SIZE) {
-                //TODO: Add outsideOfBoardException
+                throw new OutsideOfBoardException(column, row, BOARD_SIZE);
             }
 
             if(_isGiven[column, row]) {
-                //TODO: Add assignToGivenException
+                throw new UnassignableToGivenException(column, row, _board[column, row]);
             }
 
             _board[column, row] = value;
@@ -33,7 +33,7 @@ internal sealed class SudokuBoard {
 
     public SudokuBoard(char[,] board) {
         if(board.GetLength(0) != BOARD_SIZE || board.GetLength(1) != BOARD_SIZE) {
-            //TODO: Add incorectBoardSizeException
+            throw new IncorectBoardSizeException(board.GetLength(0), board.GetLength(1), BOARD_SIZE);
         }
 
         _board = board;
