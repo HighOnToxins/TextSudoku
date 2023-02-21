@@ -5,10 +5,17 @@ namespace TextSudoku;
 
 internal sealed class SudokuBoard {
 
+    //TODO: make board resizeable and other symbols, and changeable rules?
+
     public const ushort BOARD_SIZE = 9;
+
+    public IReadOnlyList<char> Symbols { get; private init; }
 
     private readonly bool[,] _isGiven;
     private readonly char[,] _board;
+
+    public int Width { get => _board.GetLength(0); }
+    public int Height { get => _board.GetLength(1); }
 
     public char this[int column, int row] {
         get {
@@ -36,13 +43,17 @@ internal sealed class SudokuBoard {
             throw new IncorectBoardSizeException(board.GetLength(0), board.GetLength(1), BOARD_SIZE);
         }
 
+        Symbols = GetDefaultSymbols();
         _board = board;
         _isGiven = DetermineGivenByNewBoard(board);
     }
 
-    public SudokuBoard() {
-        _board = new char[BOARD_SIZE, BOARD_SIZE];
-        _isGiven = new bool[BOARD_SIZE, BOARD_SIZE];
+    private static IReadOnlyList<char> GetDefaultSymbols() {
+        List<char> symbols = new();
+        for(char s = '1'; s <= '9'; s++) {
+            symbols.Add(s);
+        }
+        return symbols;
     }
 
     private static bool[,] DetermineGivenByNewBoard(char[,] newBoard) {
@@ -53,10 +64,6 @@ internal sealed class SudokuBoard {
             }
         }
         return assignable;
-    }
-
-    public void GenerateNewBoard() {
-        //TODO: Add sudoku generator.
     }
 
     public bool IsSatisfactory() {
