@@ -1,11 +1,12 @@
 ﻿
+using TextSudoku.SudokuConstraints;
 using TextSudoku.SudokuExceptions;
 
 namespace TextSudoku;
 
 internal sealed class SudokuBoard {
 
-    //TODO: make board resizeable and other symbols, and changeable rules?
+    //TODO: make board resizeable
 
     public const ushort BOARD_SIZE = 9;
 
@@ -13,6 +14,8 @@ internal sealed class SudokuBoard {
 
     private readonly bool[,] _isGiven;
     private readonly char[,] _board;
+
+    public SudokuConstraint Constraint { get; }
 
     public int Width { get => _board.GetLength(0); }
     public int Height { get => _board.GetLength(1); }
@@ -38,7 +41,7 @@ internal sealed class SudokuBoard {
         }
     }
 
-    public SudokuBoard(char[,] board) {
+    public SudokuBoard(char[,] board, SudokuConstraint constraint) {
         if(board.GetLength(0) != BOARD_SIZE || board.GetLength(1) != BOARD_SIZE) {
             throw new IncorectBoardSizeException(board.GetLength(0), board.GetLength(1), BOARD_SIZE);
         }
@@ -46,6 +49,7 @@ internal sealed class SudokuBoard {
         Symbols = GetDefaultSymbols();
         _board = board;
         _isGiven = DetermineGivenByNewBoard(board);
+        Constraint = constraint;
     }
 
     private static IReadOnlyList<char> GetDefaultSymbols() {
@@ -57,7 +61,7 @@ internal sealed class SudokuBoard {
     }
 
     private static bool[,] DetermineGivenByNewBoard(char[,] newBoard) {
-        bool[,] assignable = new bool[BOARD_SIZE, BOARD_SIZE];
+        bool[,] assignable = new bool[newBoard.GetLength(0), newBoard.GetLength(1)];
         for(int c = 0; c < newBoard.GetLength(0); c++) {
             for(int r = 0; r < newBoard.GetLength(1); r++) {
                 assignable[c, r] = newBoard[c, r] == ' ';
@@ -66,12 +70,31 @@ internal sealed class SudokuBoard {
         return assignable;
     }
 
-    public bool IsSatisfactory() {
-        throw new NotImplementedException();
-    }
-
     public bool IsSolved() {
-        throw new NotImplementedException();
+        for(int c = 0; c < Width; c++) {
+            for(int r = 0; r < Height; r++) {
+                if(Constraint.GetConstraintAt(c, r, _board).Contains(_board[c, r])) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
+    public bool IsCompleted() {
+        for(int c = 0; c < Width; c++) {
+            for(int r = 0; r < Height; r++) {
+                if(IsEmptyAt(c, r)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public IEnumerable<char> GetConstrainsAt(int c, int r) =>
+        Constraint.GetConstraintAt(c, r, _board);
+
+    public bool IsEmptyAt(int c, int r) => this[c, r] != 0 && this[c, r] != ' ';
 }
