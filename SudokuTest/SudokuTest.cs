@@ -4,6 +4,38 @@ namespace SudokuTest {
     public class SudokuTest {
 
         [Test]
+        public void SolvingWorks() {
+
+            char[,] board = {
+                { '1', '2', '3', '4', '5', '6', '7', '8', '9',},
+
+                { '4', '5', '6', '7', '8', '9', '1', '2', '3',},
+
+                { '7', '8', '9', '1', '2', '3', '4', '5', '6',},
+
+                { '3', '1', '2', '6', '4', '5', '9', '7', '8',},
+
+                { '6', '4', '5', '9', ' ', '8', '3', '1', '2',},
+
+                { '9', '7', '8', '3', '1', '2', '6', '4', '5',},
+
+                { '2', '3', '1', '5', '6', '4', '8', '9', '7',},
+
+                { '5', '6', '4', '8', '9', '7', '2', '3', '1',},
+
+                { '8', '9', '7', '2', '3', '1', '5', '6', '4',},
+            };
+
+            board = Transpose(board);
+
+            SudokuBoard sudoku = new(board);
+            SudokuManager solver = new(sudoku);
+
+            Assert.That(solver.SolveBoard());
+
+        }
+
+        [Test]
         public void IsNotSolved() {
 
             char[,] board = {

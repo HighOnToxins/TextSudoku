@@ -9,7 +9,7 @@ public sealed class SudokuBoard {
 
     public const ushort BOARD_SIZE = 9;
 
-    public IReadOnlyList<char> Symbols { get; private init; }
+    public IReadOnlySet<char> Symbols { get; private init; }
 
     internal IReadOnlyList<SudokuConstraint> Constraints { get; }
 
@@ -24,7 +24,7 @@ public sealed class SudokuBoard {
             return _board[column, row];
         }
         set {
-            if((value < '0' && value > '9') || value != ' ') {
+            if(value < '0' && value > '9' && value != ' ') {
                 throw new UndefinedElementException(value);
             }
 
@@ -91,8 +91,8 @@ public sealed class SudokuBoard {
         return constraints;
     }
 
-    private static IReadOnlyList<char> GetDefaultSymbols() {
-        List<char> symbols = new();
+    private static IReadOnlySet<char> GetDefaultSymbols() {
+        HashSet<char> symbols = new();
         for(char s = '1'; s <= '9'; s++) {
             symbols.Add(s);
         }
@@ -100,20 +100,20 @@ public sealed class SudokuBoard {
     }
 
     private static bool[,] DetermineGivenByNewBoard(char[,] newBoard) {
-        bool[,] assignable = new bool[newBoard.GetLength(0), newBoard.GetLength(1)];
+        bool[,] isGiven = new bool[newBoard.GetLength(0), newBoard.GetLength(1)];
         for(int c = 0; c < newBoard.GetLength(0); c++) {
             for(int r = 0; r < newBoard.GetLength(1); r++) {
-                assignable[c, r] = newBoard[c, r] == ' ';
+                isGiven[c, r] = newBoard[c, r] != ' ' && newBoard[c, r] != 0;
             }
         }
-        return assignable;
+        return isGiven;
     }
 
     public bool IsSolved() {
         for(int c = 0; c < Width; c++) {
             for(int r = 0; r < Height; r++) {
                 foreach(SudokuConstraint constraint in Constraints) {
-                    if(!constraint.IsAllowed(c, r, _board)) {
+                    if(!constraint.IsAllowed(c, r, _board, Symbols)) {
                         return false;
                     }
                 }
@@ -137,5 +137,5 @@ public sealed class SudokuBoard {
     public IEnumerable<char> GetConstrainsAt(int c, int r) =>
         Constraints.SelectMany(con => con.GetConstraintAt(c, r, _board, Symbols));
 
-    public bool IsEmptyAt(int c, int r) => this[c, r] != 0 && this[c, r] != ' ';
+    public bool IsEmptyAt(int c, int r) => this[c, r] == 0 || this[c, r] == ' ';
 }

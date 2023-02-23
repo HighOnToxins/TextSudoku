@@ -23,19 +23,23 @@ internal sealed class SudokuArea {
 
     public bool Contains(int c, int r) => _cells.Contains(new Cell(c, r));
 
-    public IReadOnlyList<SymbolCell> GetCells(char[,] board) {
+    public IReadOnlyList<SymbolCell> GetFilledCells(char[,] board, IReadOnlySet<char> symbols) {
         List<SymbolCell> symbolCells = new();
         foreach(Cell cell in _cells) {
-            symbolCells.Add(new SymbolCell(cell.Column, cell.Row, board[cell.Column, cell.Row]));
+            if(symbols.Contains(board[cell.Column, cell.Row])) {
+                symbolCells.Add(new SymbolCell(cell.Column, cell.Row, board[cell.Column, cell.Row]));
+            }
         }
         return symbolCells;
     }
 
-    public IReadOnlyList<SymbolCell> GetCells(List<char>[,] boardCandidates) {
+    public IReadOnlyList<SymbolCell> GetFilledCells(List<char>[,] boardCandidates, IReadOnlySet<char> symbols) {
         List<SymbolCell> symbolCells = new();
         foreach(Cell cell in _cells) {
             for(int i = 0; i < boardCandidates[cell.Column, cell.Row].Count; i++) {
-                symbolCells.Add(new SymbolCell(cell.Column, cell.Row, boardCandidates[cell.Column, cell.Row][i]));
+                if(symbols.Contains(boardCandidates[cell.Column, cell.Row][i])) {
+                    symbolCells.Add(new SymbolCell(cell.Column, cell.Row, boardCandidates[cell.Column, cell.Row][i]));
+                }
             }
         }
         return symbolCells;

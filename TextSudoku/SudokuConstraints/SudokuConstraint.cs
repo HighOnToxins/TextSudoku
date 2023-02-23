@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.Generic;
 using static TextSudoku.SudokuConstraints.SudokuArea;
 
 namespace TextSudoku.SudokuConstraints;
@@ -15,35 +16,34 @@ internal sealed class SudokuConstraint {
         _rule = rule;
     }
 
-    public IEnumerable<char> GetConstraintAt(int c, int r, char[,] board, IReadOnlyList<char> symbols) {
+    public IEnumerable<char> GetConstraintAt(int c, int r, char[,] board, IReadOnlySet<char> symbols) {
         if(!_area.Contains(c, r)) return Array.Empty<char>();
 
-        IReadOnlyList<SymbolCell> cells = _area.GetCells(board);
+        IReadOnlyList<SymbolCell> cells = _area.GetFilledCells(board, symbols);
         return GetConstrainedCells(c, r, cells, symbols);
     }
 
-    public IEnumerable<char> GetConstraintAt(int c, int r, List<char>[,] boardCandidates, IReadOnlyList<char> symbols) {
+    public IEnumerable<char> GetConstraintAt(int c, int r, List<char>[,] boardCandidates, IReadOnlySet<char> symbols) {
         if(!_area.Contains(c, r)) return Array.Empty<char>();
 
-        IReadOnlyList<SymbolCell> cells = _area.GetCells(boardCandidates);
+        IReadOnlyList<SymbolCell> cells = _area.GetFilledCells(boardCandidates, symbols);
         return GetConstrainedCells(c, r, cells, symbols);
     }
 
-    private IEnumerable<char> GetConstrainedCells(int c, int r, IReadOnlyList<SymbolCell> cells, IReadOnlyList<char> symbols) {
-
-        for(int i = 0; i < symbols.Count; i++) {
+    private IEnumerable<char> GetConstrainedCells(int c, int r, IReadOnlyList<SymbolCell> cells, IReadOnlySet<char> symbols) {
+        foreach(char symbol in symbols) {
             foreach(SymbolCell cell in cells) {
-                if(!_rule.IsAllowed(c, r, symbols[i], cell.Row, cell.Column, cell.Symbol)) {
-                    yield return symbols[i];
+                if(!_rule.IsAllowed(c, r, symbol, cell.Row, cell.Column, cell.Symbol)) {
+                    yield return symbol;
                 }
             }
         }
     }
 
-    public bool IsAllowed(int c, int r, char[,] board) {
+    public bool IsAllowed(int c, int r, char[,] board, IReadOnlySet<char> symbols) {
         if(!_area.Contains(c, r)) return true;
 
-        IReadOnlyList<SymbolCell> cells = _area.GetCells(board);
+        IReadOnlyList<SymbolCell> cells = _area.GetFilledCells(board, symbols);
         foreach(SymbolCell cell in cells) {
             if(!_rule.IsAllowed(c, r, board[c, r], cell.Column, cell.Row, cell.Symbol)) {
                 return false;

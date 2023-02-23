@@ -23,8 +23,8 @@ public sealed class SudokuManager {
             for(int r = 0; r < candidates.GetLength(1); r++) {
                 candidates[c, r] = new();
 
-                for(int i = 0; i < board.Symbols.Count; i++) {
-                    candidates[c, r].Add(board.Symbols[i]);
+                foreach(char symbol in board.Symbols) {
+                    candidates[c, r].Add(symbol);
                 }
             }
         }
@@ -35,27 +35,25 @@ public sealed class SudokuManager {
     public bool EleminateCandidates() {
         bool eleminatedAtLeastOneCandidate = false;
 
-        //board based elemination
         for(int c = 0; c < _board.Width; c++) {
             for(int r = 0; r < _board.Height; r++) {
                 if(!_board.IsEmptyAt(c, r)) {
+                    _candidateCandidates[c, r].Clear();
                     _boardCandidates[c, r].Clear();
                     continue;
                 }
 
+                //board based elemination
                 foreach(char candidate in _board.GetConstrainsAt(c, r)) {
-                    _boardCandidates[c, r].Remove(candidate);
-                    eleminatedAtLeastOneCandidate = true;
+                    if(_boardCandidates[c, r].Remove(candidate)) {
+                        eleminatedAtLeastOneCandidate = true;
+                    }
                 }
-            }
-        }
 
-        //candidate based elemination
-        for(int c = 0; c < _board.Width; c++) {
-            for(int r = 0; r < _board.Height; r++) {
                 foreach(char candidate in _board.Constraints.SelectMany(con => con.GetConstraintAt(c, r, _boardCandidates, _board.Symbols))) {
-                    _candidateCandidates[c, r].Remove(candidate);
-                    eleminatedAtLeastOneCandidate = true;
+                    if(_candidateCandidates[c, r].Remove(candidate)) {
+                        eleminatedAtLeastOneCandidate = true;
+                    }
                 }
             }
         }
@@ -87,8 +85,8 @@ public sealed class SudokuManager {
 
         bool flag = true;
         while(flag) {
-            bool f1 = AddElementsToBoard();
-            bool f2 = EleminateCandidates();
+            bool f1 = EleminateCandidates();
+            bool f2 = AddElementsToBoard();
             flag = f1 || f2;
         }
 
