@@ -1,4 +1,5 @@
 ﻿
+using System.Data;
 using TextSudoku.SudokuConstraints;
 using TextSudoku.SudokuExceptions;
 
@@ -15,7 +16,7 @@ internal sealed class SudokuBoard {
     private readonly bool[,] _isGiven;
     private readonly char[,] _board;
 
-    public SudokuConstraint Constraint { get; }
+    public IReadOnlyList<SudokuConstraint> Constraints { get; }
 
     public int Width { get => _board.GetLength(0); }
     public int Height { get => _board.GetLength(1); }
@@ -41,7 +42,7 @@ internal sealed class SudokuBoard {
         }
     }
 
-    public SudokuBoard(char[,] board, SudokuConstraint constraint) {
+    public SudokuBoard(char[,] board, params SudokuConstraint[] constraint) {
         if(board.GetLength(0) != BOARD_SIZE || board.GetLength(1) != BOARD_SIZE) {
             throw new IncorectBoardSizeException(board.GetLength(0), board.GetLength(1), BOARD_SIZE);
         }
@@ -49,7 +50,7 @@ internal sealed class SudokuBoard {
         Symbols = GetDefaultSymbols();
         _board = board;
         _isGiven = DetermineGivenByNewBoard(board);
-        Constraint = constraint;
+        Constraints = constraint;
     }
 
     private static IReadOnlyList<char> GetDefaultSymbols() {
@@ -73,8 +74,10 @@ internal sealed class SudokuBoard {
     public bool IsSolved() {
         for(int c = 0; c < Width; c++) {
             for(int r = 0; r < Height; r++) {
-                if(Constraint.GetConstraintAt(c, r, _board).Contains(_board[c, r])) {
-                    return false;
+                foreach(SudokuConstraint constraint in Constraints) {
+                    if(constraint.GetConstraintAt(c, r, _board, Symbols).Contains(_board[c, r])) {
+                        return false;
+                    }
                 }
             }
         }
@@ -94,7 +97,7 @@ internal sealed class SudokuBoard {
     }
 
     public IEnumerable<char> GetConstrainsAt(int c, int r) =>
-        Constraint.GetConstraintAt(c, r, _board);
+        Constraints.SelectMany(con => con.GetConstraintAt(c, r, _board, Symbols));
 
     public bool IsEmptyAt(int c, int r) => this[c, r] != 0 && this[c, r] != ' ';
 }

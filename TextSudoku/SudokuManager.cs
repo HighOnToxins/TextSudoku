@@ -53,7 +53,7 @@ internal sealed class SudokuManager {
         //candidate based elemination
         for(int c = 0; c < _board.Width; c++) {
             for(int r = 0; r < _board.Height; r++) {
-                foreach(char candidate in _board.Constraint.GetConstraintAt(c, r, _boardCandidates)) {
+                foreach(char candidate in _board.Constraints.SelectMany(con => con.GetConstraintAt(c, r, _boardCandidates, _board.Symbols))) {
                     _candidateCandidates[c, r].Remove(candidate);
                     eleminatedAtLeastOneCandidate = true;
                 }
