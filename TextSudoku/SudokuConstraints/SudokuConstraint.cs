@@ -1,4 +1,6 @@
 ﻿
+using static TextSudoku.SudokuConstraints.SudokuArea;
+
 namespace TextSudoku.SudokuConstraints;
 
 internal record SymbolCell(int Column, int Row, char Symbol);
@@ -36,6 +38,18 @@ internal sealed class SudokuConstraint {
                 }
             }
         }
+    }
+
+    public bool IsAllowed(int c, int r, char[,] board) {
+        if(!_area.Contains(c, r)) return true;
+
+        IReadOnlyList<SymbolCell> cells = _area.GetCells(board);
+        foreach(SymbolCell cell in cells) {
+            if(!_rule.IsAllowed(c, r, board[c, r], cell.Column, cell.Row, cell.Symbol)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

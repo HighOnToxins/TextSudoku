@@ -3,7 +3,7 @@ using Candidates = System.Collections.Generic.List<char>;
 
 namespace TextSudoku;
 
-internal sealed class SudokuManager {
+public sealed class SudokuManager {
 
     private Candidates[,] _boardCandidates;
     private Candidates[,] _candidateCandidates;
@@ -94,28 +94,12 @@ internal sealed class SudokuManager {
 
         //TODO: Add guessing.
 
-        return IsSolved();
+        return _board.IsSolved();
     }
 
     public void Reset() {
         _boardCandidates = GenerateDefaultCandidates(_board);
         _candidateCandidates = GenerateDefaultCandidates(_board);
     }
-
-    public bool IsCorrect() {
-        for(int c = 0; c < _board.Width; c++) {
-            for(int r = 0; r < _board.Height; r++) {
-                if(_boardCandidates[c, r].Count != 0) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    public bool IsSolved() {
-        return _board.IsCompleted() && IsCorrect();
-    }
-
 
 }

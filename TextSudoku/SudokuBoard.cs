@@ -1,11 +1,9 @@
-﻿
-using System.Data;
-using TextSudoku.SudokuConstraints;
+﻿using TextSudoku.SudokuConstraints;
 using TextSudoku.SudokuExceptions;
 
 namespace TextSudoku;
 
-internal sealed class SudokuBoard {
+public sealed class SudokuBoard {
 
     //TODO: make board resizeable
 
@@ -13,10 +11,10 @@ internal sealed class SudokuBoard {
 
     public IReadOnlyList<char> Symbols { get; private init; }
 
+    internal IReadOnlyList<SudokuConstraint> Constraints { get; }
+
     private readonly bool[,] _isGiven;
     private readonly char[,] _board;
-
-    public IReadOnlyList<SudokuConstraint> Constraints { get; }
 
     public int Width { get => _board.GetLength(0); }
     public int Height { get => _board.GetLength(1); }
@@ -42,7 +40,15 @@ internal sealed class SudokuBoard {
         }
     }
 
-    public SudokuBoard(char[,] board, params SudokuConstraint[] constraint) {
+    public char this[Index column, int row] => this[column.IsFromEnd ? BOARD_SIZE - column.Value - 1 : column.Value, row];
+    public char this[int column, Index row] => this[column, row.IsFromEnd ? BOARD_SIZE - row.Value - 1 : row.Value];
+    public char this[Index column, Index row] => this[column.IsFromEnd ? BOARD_SIZE - column.Value - 1 : column.Value, row.IsFromEnd ? BOARD_SIZE - row.Value - 1 : row.Value];
+
+    internal SudokuBoard(char[,] board, params SudokuConstraint[] constraint) : this(board) {
+        Constraints = constraint;
+    }
+
+    public SudokuBoard(char[,] board) {
         if(board.GetLength(0) != BOARD_SIZE || board.GetLength(1) != BOARD_SIZE) {
             throw new IncorectBoardSizeException(board.GetLength(0), board.GetLength(1), BOARD_SIZE);
         }
@@ -50,7 +56,39 @@ internal sealed class SudokuBoard {
         Symbols = GetDefaultSymbols();
         _board = board;
         _isGiven = DetermineGivenByNewBoard(board);
-        Constraints = constraint;
+        Constraints = DefaultConstraints();
+    }
+
+    private static IReadOnlyList<SudokuConstraint> DefaultConstraints() {
+        List<SudokuConstraint> constraints = new();
+
+        //adding boxes
+        for(int i = 0; i < BOARD_SIZE; i++) {
+            for(int j = 0; j < BOARD_SIZE; j++) {
+                constraints.Add(new SudokuConstraint(
+                    new SudokuArea(i * BOARD_SIZE / 3, j * BOARD_SIZE / 3, (i + 1) * BOARD_SIZE / 3 - 1, (j + 1) * BOARD_SIZE / 3 - 1),
+                    new OneRule()
+                ));
+            }
+        }
+
+        //adding columns
+        for(int i = 0; i < BOARD_SIZE; i++) {
+            constraints.Add(new SudokuConstraint(
+                new SudokuArea(i, 0, i, BOARD_SIZE - 1),
+                new OneRule()
+            ));
+        }
+
+        //adding rows
+        for(int i = 0; i < BOARD_SIZE; i++) {
+            constraints.Add(new SudokuConstraint(
+                new SudokuArea(i, 0, i, BOARD_SIZE - 1),
+                new OneRule()
+            ));
+        }
+
+        return constraints;
     }
 
     private static IReadOnlyList<char> GetDefaultSymbols() {
@@ -75,7 +113,7 @@ internal sealed class SudokuBoard {
         for(int c = 0; c < Width; c++) {
             for(int r = 0; r < Height; r++) {
                 foreach(SudokuConstraint constraint in Constraints) {
-                    if(constraint.GetConstraintAt(c, r, _board, Symbols).Contains(_board[c, r])) {
+                    if(!constraint.IsAllowed(c, r, _board)) {
                         return false;
                     }
                 }
