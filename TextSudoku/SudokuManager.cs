@@ -1,18 +1,19 @@
 ﻿
+using TextSudoku.SudokuConstraints;
 using Candidates = System.Collections.Generic.List<char>;
 
 namespace TextSudoku;
 
 public sealed class SudokuManager {
 
-    private Candidates[,] _boardCandidates;
-    private Candidates[,] _candidateCandidates;
+    private Candidates[,] _candidates;
+    private Candidates[,] _shortTermCandidates;
     private readonly SudokuBoard _board;
 
     public SudokuManager(SudokuBoard board) {
         _board = board;
-        _boardCandidates = GenerateDefaultCandidates(board);
-        _candidateCandidates = GenerateDefaultCandidates(_board);
+        _candidates = GenerateDefaultCandidates(board);
+        _shortTermCandidates = GenerateDefaultCandidates(_board);
     }
 
     private static Candidates[,] GenerateDefaultCandidates(SudokuBoard board) {
@@ -33,52 +34,66 @@ public sealed class SudokuManager {
     }
 
     public bool EleminateCandidates() {
-        bool eleminatedAtLeastOneCandidate = false;
-
+        bool aCandidateHasBeenEleminated = false;
+        _shortTermCandidates = new Candidates[_candidates.GetLength(0), _candidates.GetLength(1)];
+       
         for(int c = 0; c < _board.Width; c++) {
             for(int r = 0; r < _board.Height; r++) {
+                _shortTermCandidates[c, r] = _candidates[c, r].ToList();
+
+                //board based elemination
                 if(!_board.IsEmptyAt(c, r)) {
-                    _candidateCandidates[c, r].Clear();
-                    _boardCandidates[c, r].Clear();
+                    _shortTermCandidates[c, r].Clear();
+                    _candidates[c, r].Clear();
                     continue;
                 }
 
-                //board based elemination
-                foreach(char candidate in _board.GetConstrainsAt(c, r)) {
-                    if(_boardCandidates[c, r].Remove(candidate)) {
-                        eleminatedAtLeastOneCandidate = true;
+                for(int i = 0; i < _candidates[c, r].Count; i++) {
+                    if(!_board.IsAllowed(c, r, _candidates[c, r][i]) && _candidates[c, r].Remove(_candidates[c, r][i])) {
+                        i--;
+                        aCandidateHasBeenEleminated = true;
                     }
                 }
 
-                foreach(char candidate in _board.Constraints.SelectMany(con => con.GetConstraintAt(c, r, _boardCandidates, _board.Symbols))) {
-                    if(_candidateCandidates[c, r].Remove(candidate)) {
-                        eleminatedAtLeastOneCandidate = true;
+                //candidate based elemination
+                for(int i = 0; i < _shortTermCandidates[c, r].Count; i++){
+                    if(!_board.IsAllowed(c, r, _shortTermCandidates[c, r][i]) && _candidates[c, r].Remove(_shortTermCandidates[c, r][i])) {
+                        _shortTermCandidates[c, r].Remove(_shortTermCandidates[c, r][i]);
+                        i--;
+                        continue;
+                    }
+                    foreach(SudokuConstraint constraint in _board.Constraints) {
+                        if(!constraint.IsAllowed(c, r, _shortTermCandidates[c, r][i], _candidates, _board.Symbols)) {
+                            _shortTermCandidates[c, r].Remove(_shortTermCandidates[c, r][i]);
+                            i--;
+                            break;
+                        }
                     }
                 }
             }
         }
 
-        return eleminatedAtLeastOneCandidate;
+        return aCandidateHasBeenEleminated;
     }
 
     public bool AddElementsToBoard() {
-        bool addedAnyElements = false;
+        bool anElementHasBeenAdded = false;
 
         for(int c = 0; c < _board.Width; c++) {
             for(int r = 0; r < _board.Height; r++) {
-                if(_boardCandidates[c, r].Count == 1) {
-                    _board[c, r] = _boardCandidates[c, r][0];
-                    addedAnyElements = true;
+                if(_candidates[c, r].Count == 1) {
+                    _board[c, r] = _candidates[c, r][0];
+                    anElementHasBeenAdded = true;
                 }
 
-                if(_candidateCandidates[c, r].Count == 1) {
-                    _board[c, r] = _candidateCandidates[c, r][0];
-                    addedAnyElements = true;
+                if(_shortTermCandidates[c, r].Count == 1) {
+                    _board[c, r] = _shortTermCandidates[c, r][0];
+                    anElementHasBeenAdded = true;
                 }
             }
         }
 
-        return addedAnyElements;
+        return anElementHasBeenAdded;
     }
 
     public bool SolveBoard() {
@@ -96,8 +111,8 @@ public sealed class SudokuManager {
     }
 
     public void Reset() {
-        _boardCandidates = GenerateDefaultCandidates(_board);
-        _candidateCandidates = GenerateDefaultCandidates(_board);
+        _candidates = GenerateDefaultCandidates(_board);
+        _shortTermCandidates = GenerateDefaultCandidates(_board);
     }
 
 }

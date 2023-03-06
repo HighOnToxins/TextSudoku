@@ -24,7 +24,7 @@ public sealed class SudokuBoard {
             return _board[column, row];
         }
         set {
-            if(value < '0' && value > '9' && value != ' ') {
+            if(value < '0' && value > '9' && !char.IsWhiteSpace(value)) {
                 throw new UndefinedElementException(value);
             }
 
@@ -63,8 +63,8 @@ public sealed class SudokuBoard {
         List<SudokuConstraint> constraints = new();
 
         //adding boxes
-        for(int i = 0; i < BOARD_SIZE; i++) {
-            for(int j = 0; j < BOARD_SIZE; j++) {
+        for(int i = 0; i < BOARD_SIZE; i += 3) {
+            for(int j = 0; j < BOARD_SIZE; j += 3) {
                 constraints.Add(new SudokuConstraint(
                     new SudokuArea(i * BOARD_SIZE / 3, j * BOARD_SIZE / 3, (i + 1) * BOARD_SIZE / 3 - 1, (j + 1) * BOARD_SIZE / 3 - 1),
                     new OneRule()
@@ -103,17 +103,21 @@ public sealed class SudokuBoard {
         bool[,] isGiven = new bool[newBoard.GetLength(0), newBoard.GetLength(1)];
         for(int c = 0; c < newBoard.GetLength(0); c++) {
             for(int r = 0; r < newBoard.GetLength(1); r++) {
-                isGiven[c, r] = newBoard[c, r] != ' ' && newBoard[c, r] != 0;
+                isGiven[c, r] = !char.IsWhiteSpace(newBoard[c, r]);
             }
         }
         return isGiven;
     }
 
     public bool IsSolved() {
+        if(!IsCompleted()) {
+            return false;
+        }
+
         for(int c = 0; c < Width; c++) {
             for(int r = 0; r < Height; r++) {
                 foreach(SudokuConstraint constraint in Constraints) {
-                    if(!constraint.IsAllowed(c, r, _board, Symbols)) {
+                    if(!constraint.IsAllowed(c, r, _board[c, r], _board, Symbols)) {
                         return false;
                     }
                 }
@@ -134,8 +138,14 @@ public sealed class SudokuBoard {
         return true;
     }
 
-    public IEnumerable<char> GetConstrainsAt(int c, int r) =>
-        Constraints.SelectMany(con => con.GetConstraintAt(c, r, _board, Symbols));
+    public bool IsEmptyAt(int c, int r) => char.IsWhiteSpace(this[c, r]);
 
-    public bool IsEmptyAt(int c, int r) => this[c, r] == 0 || this[c, r] == ' ';
+    internal bool IsAllowed(int c, int r, char candidate) {
+        foreach(SudokuConstraint constraint in Constraints) {
+            if(!constraint.IsAllowed(c, r, candidate, _board, Symbols)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

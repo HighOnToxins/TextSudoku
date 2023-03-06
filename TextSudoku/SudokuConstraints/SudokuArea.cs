@@ -23,8 +23,8 @@ internal sealed class SudokuArea {
 
     public bool Contains(int c, int r) => _cells.Contains(new Cell(c, r));
 
-    public IReadOnlyList<SymbolCell> GetFilledCells(char[,] board, IReadOnlySet<char> symbols) {
-        List<SymbolCell> symbolCells = new();
+    public IReadOnlySet<SymbolCell> GetFilledCells(char[,] board, IReadOnlySet<char> symbols) {
+        HashSet<SymbolCell> symbolCells = new();
         foreach(Cell cell in _cells) {
             if(symbols.Contains(board[cell.Column, cell.Row])) {
                 symbolCells.Add(new SymbolCell(cell.Column, cell.Row, board[cell.Column, cell.Row]));
@@ -33,8 +33,8 @@ internal sealed class SudokuArea {
         return symbolCells;
     }
 
-    public IReadOnlyList<SymbolCell> GetFilledCells(List<char>[,] boardCandidates, IReadOnlySet<char> symbols) {
-        List<SymbolCell> symbolCells = new();
+    public IReadOnlySet<SymbolCell> GetFilledCells(IReadOnlyList<char>[,] boardCandidates, IReadOnlySet<char> symbols) {
+        HashSet<SymbolCell> symbolCells = new();
         foreach(Cell cell in _cells) {
             for(int i = 0; i < boardCandidates[cell.Column, cell.Row].Count; i++) {
                 if(symbols.Contains(boardCandidates[cell.Column, cell.Row][i])) {

@@ -16,40 +16,25 @@ internal sealed class SudokuConstraint {
         _rule = rule;
     }
 
-    public IEnumerable<char> GetConstraintAt(int c, int r, char[,] board, IReadOnlySet<char> symbols) {
-        if(!_area.Contains(c, r)) return Array.Empty<char>();
-
-        IReadOnlyList<SymbolCell> cells = _area.GetFilledCells(board, symbols);
-        return GetConstrainedCells(c, r, cells, symbols);
-    }
-
-    public IEnumerable<char> GetConstraintAt(int c, int r, List<char>[,] boardCandidates, IReadOnlySet<char> symbols) {
-        if(!_area.Contains(c, r)) return Array.Empty<char>();
-
-        IReadOnlyList<SymbolCell> cells = _area.GetFilledCells(boardCandidates, symbols);
-        return GetConstrainedCells(c, r, cells, symbols);
-    }
-
-    private IEnumerable<char> GetConstrainedCells(int c, int r, IReadOnlyList<SymbolCell> cells, IReadOnlySet<char> symbols) {
-        foreach(char symbol in symbols) {
-            foreach(SymbolCell cell in cells) {
-                if(!_rule.IsAllowed(c, r, symbol, cell.Row, cell.Column, cell.Symbol)) {
-                    yield return symbol;
-                }
-            }
-        }
-    }
-
-    public bool IsAllowed(int c, int r, char[,] board, IReadOnlySet<char> symbols) {
+    public bool IsAllowed(int c, int r, char symbol, char[,] board, IReadOnlySet<char> symbols) {
         if(!_area.Contains(c, r)) return true;
+        IReadOnlySet<SymbolCell> cells = _area.GetFilledCells(board, symbols);
+        return DetermineIsAllowed(c, r, symbol, cells);
+    }
+    
+    public bool IsAllowed(int c, int r, char symbol, IReadOnlyList<char>[,] candidates, IReadOnlySet<char> symbols) {
+        if(!_area.Contains(c, r)) return true;
+        IReadOnlySet<SymbolCell> cells = _area.GetFilledCells(candidates, symbols);
+        return DetermineIsAllowed(c, r, symbol, cells);
+    }
 
-        IReadOnlyList<SymbolCell> cells = _area.GetFilledCells(board, symbols);
+    private bool DetermineIsAllowed(int c, int r, char symbol, IReadOnlySet<SymbolCell> cells) {
         foreach(SymbolCell cell in cells) {
-            if(!_rule.IsAllowed(c, r, board[c, r], cell.Column, cell.Row, cell.Symbol)) {
+            if(!_rule.IsAllowed(c, r, symbol, cell.Column, cell.Row, cell.Symbol)) {
                 return false;
             }
         }
+
         return true;
     }
-
 }
