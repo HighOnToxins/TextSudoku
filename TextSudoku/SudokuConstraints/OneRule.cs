@@ -6,6 +6,8 @@ internal sealed class OneRule: ISudokuRule {
     public bool IsAllowed(int c1, int r1, char symbol1, int c2, int r2, char symbol2) =>
         (c1 == c2 && r1 == r2) || symbol1 != symbol2;
 
+    //TODO: Try to use contains, instead of is valid. Or maybe both. And an or based contains. Assignment and con-/disjunction?
+
     /* METHOD FOR CHECKING THE ENTIRE SUDOKU
     public bool IsAllowed(IReadOnlySet<SymbolCell> cells){
         
