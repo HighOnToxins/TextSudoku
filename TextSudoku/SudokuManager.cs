@@ -36,7 +36,7 @@ public sealed class SudokuManager {
     public bool EleminateCandidates() {
         bool aCandidateHasBeenEleminated = false;
         _shortTermCandidates = new Candidates[_candidates.GetLength(0), _candidates.GetLength(1)];
-       
+
         for(int c = 0; c < _board.Width; c++) {
             for(int r = 0; r < _board.Height; r++) {
                 _shortTermCandidates[c, r] = _candidates[c, r].ToList();
@@ -56,7 +56,7 @@ public sealed class SudokuManager {
                 }
 
                 //candidate based elemination
-                for(int i = 0; i < _shortTermCandidates[c, r].Count; i++){
+                for(int i = 0; i < _shortTermCandidates[c, r].Count; i++) {
                     if(!_board.IsAllowed(c, r, _shortTermCandidates[c, r][i]) && _candidates[c, r].Remove(_shortTermCandidates[c, r][i])) {
                         _shortTermCandidates[c, r].Remove(_shortTermCandidates[c, r][i]);
                         i--;

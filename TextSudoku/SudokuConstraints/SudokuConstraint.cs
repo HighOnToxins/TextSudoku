@@ -1,7 +1,4 @@
 ﻿
-using System.Collections.Generic;
-using static TextSudoku.SudokuConstraints.SudokuArea;
-
 namespace TextSudoku.SudokuConstraints;
 
 internal record SymbolCell(int Column, int Row, char Symbol);
@@ -21,7 +18,7 @@ internal sealed class SudokuConstraint {
         IReadOnlySet<SymbolCell> cells = _area.GetFilledCells(board, symbols);
         return DetermineIsAllowed(c, r, symbol, cells);
     }
-    
+
     public bool IsAllowed(int c, int r, char symbol, IReadOnlyList<char>[,] candidates, IReadOnlySet<char> symbols) {
         if(!_area.Contains(c, r)) return true;
         IReadOnlySet<SymbolCell> cells = _area.GetFilledCells(candidates, symbols);
