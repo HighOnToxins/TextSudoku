@@ -7,4 +7,4 @@ internal interface ISudokuRule {
 
 //TODO: Add a method for checking if the entire area is valid.
 //TODO: Find a way to determine must haves.
-//TODO: 
+//TODO: Try to use contains, instead of is valid. Or maybe both. And an or based contains. Assignment and con-/disjunction?
